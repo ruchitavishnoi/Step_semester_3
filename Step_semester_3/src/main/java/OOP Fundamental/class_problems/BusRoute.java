@@ -1,56 +1,73 @@
-public class BusRoute {
-    private String routeCode;
-    private String routeName;
-    private int priority;
-    public BusRoute(String routeCode, String routeName, int priority) {
-        this.routeCode = routeCode;
-        this.routeName = routeName;
-        this.priority = priority;
+import java.util.HashSet;
+import java.util.Set;
+
+public class BusTicket {
+    private final String passengerName;
+    private final String destination;
+    private boolean checkedIn;
+    private BusTicket() {
+        throw new UnsupportedOperationException("No-argument constructor is not allowed.");
     }
 
-    public BusRoute(String routeCode, String routeName) {
-        this(routeCode, routeName, 0); 
-    }  
-    public int compareTo(BusRoute other) {
-        
-        if (this.priority != other.priority) {
-            return other.priority - this.priority; 
+    public BusTicket(String passengerName, String destination) {
+        if (!isValid(passengerName) || !isValid(destination)) {
+            throw new IllegalArgumentException("Invalid passenger name or destination.");
         }
-        String thisCodeLower = this.routeCode.toLowerCase();
-        String otherCodeLower = other.routeCode.toLowerCase();
-        
-        int codeCompare = thisCodeLower.compareTo(otherCodeLower);
-        if (codeCompare != 0) {
-            return codeCompare;
-        }
-        String thisNameLower = this.routeName.toLowerCase();
-        String otherNameLower = other.routeName.toLowerCase();
-        
-        return thisNameLower.compareTo(otherNameLower);
+        this.passengerName = passengerName.trim();
+        this.destination = destination.trim();
+        this.checkedIn = false;
     }
 
-    public static BusRoute[] rankRoutes(BusRoute[] routes) {
-        if (routes == null) return null;
-        
-        int n = routes.length;
-        for (int i = 0; i < n - 1; i++) {
-            for (int j = 0; j < n - i - 1; j++) {
-                if (routes[j].compareTo(routes[j + 1]) > 0) {
-                    BusRoute temp = routes[j];
-                    routes[j] = routes[j + 1];
-                    routes[j + 1] = temp;
+    private static boolean isValid(String field) {
+        return field != null && !field.trim().isEmpty() && field.trim().matches("^[a-zA-Z\\s]+$");
+    }
+
+    public void markCheckedIn() {
+        if (this.checkedIn) {
+            throw new IllegalStateException("Ticket has already been checked in.");
+        }
+        this.checkedIn = true;
+    }
+
+    public String getPassengerName() {
+        return passengerName;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public static void processBatch(String[][] rawBookings) {
+        int validCount = 0;
+        int rejectedCount = 0;
+        int duplicateCount = 0;
+
+        Set<String> acceptedBookings = new HashSet<>();
+
+        if (rawBookings != null) {
+            for (String[] entry : rawBookings) {
+                if (entry == null || entry.length < 2) {
+                    rejectedCount++;
+                    continue;
                 }
-                
+
+                try {
+                    BusTicket ticket = new BusTicket(entry[0], entry[1]);
+                    String bookingKey = ticket.getPassengerName().toLowerCase() + "||" + ticket.getDestination().toLowerCase();
+
+                    if (acceptedBookings.contains(bookingKey)) {
+                        duplicateCount++;
+                    } else {
+                        acceptedBookings.add(bookingKey);
+                        validCount++;
+                    }
+                } catch (IllegalArgumentException e) {
+                    rejectedCount++;
+                }
             }
         }
-        
-        return routes;
-    }
-    public String getRouteCode() {
-        return this.routeCode;
-    }
-    @Override
-    public String toString() {
-        return "\"" + this.routeCode + "\"";
+
+        System.out.printf("Valid: %d | Rejected: %d | Duplicates skipped: %d%n", 
+                          validCount, rejectedCount, duplicateCount);
     }
 }
