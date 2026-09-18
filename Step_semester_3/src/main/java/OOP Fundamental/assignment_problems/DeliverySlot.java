@@ -1,0 +1,30 @@
+public class DeliverySlot {
+    private String orderId;
+    private String timeSlot;
+
+    private static final String DEFAULT_SLOT = "ASAP";
+
+    public DeliverySlot(String orderId, String timeSlot) {
+        this.orderId = orderId;
+        this.timeSlot = timeSlot;
+    }
+
+    public DeliverySlot(String orderId) {
+        this(orderId, DEFAULT_SLOT);
+    }
+
+    public boolean isPeakHour() {
+        return "12:00-13:00".equals(timeSlot) ||
+               "13:00-14:00".equals(timeSlot) ||
+               "19:00-20:00".equals(timeSlot) ||
+               "20:00-21:00".equals(timeSlot);
+    }
+
+    public static void main(String[] args) {
+        DeliverySlot slot1 = new DeliverySlot("ORD101", "13:00-14:00");
+        System.out.println(slot1.isPeakHour());
+
+        DeliverySlot slot2 = new DeliverySlot("ORD102");
+        System.out.println(slot2.isPeakHour());
+    }
+}
